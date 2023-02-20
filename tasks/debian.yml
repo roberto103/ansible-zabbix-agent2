@@ -1,0 +1,40 @@
+---
+- name: Atualizando pacotes
+  apt:
+    update_cache: yes
+    upgrade: yes
+
+- name: Instalando gpg
+  apt:
+    name: gpg
+    state: present
+
+- name: Adicionando apt key
+  apt_key:
+    url: http://repo.zabbix.com/zabbix-official-repo.key
+    state: present
+
+- name: Instalando repositório
+  apt_repository:
+    repo: "{{ item }} https://repo.zabbix.com/zabbix/{{ zabbix_version }}/debian {{ ansible_distribution_release }} main"
+    state: present
+    filename: zabbix
+  with_items:
+    - deb
+    - deb-src
+
+- name: Copiando zabbix_agent2.conf
+  template:
+    src: ../templates/zabbix_agent2.conf.j2
+    dest: /etc/zabbix/zabbix_agent2.confg
+
+- name: Instalando Zabbix Agent2
+  apt:
+    name: ['zabbix-agent2', 'zabbix-agent2-plugin-*']
+    state: present
+
+- name: Iniciando Zabbix Agent 2
+  service:
+    name: zabbix-agent2
+    state: started
+    enabled: true
